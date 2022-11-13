@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package second.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./second";
+
+// Accepts requests from FirstService.
+service SecondService {
+  // Create
+  //
+  // Create a new model.
+  rpc Create(CreateRequest) returns (CreateResponse);
+
+  // GetByID
+  //
+  // Fetches a model by ID.
+  rpc GetByID(GetByIDRequest) returns (GetByIDResponse);
+}
+
+message CreateRequest {
+  // The name for the model.
+  string name = 1;
+}
+
+message CreateResponse {
+  // The newly created model.
+  Model model = 1;
+}
+
+message GetByIDRequest {
+  // A param value.
+  int64 id = 1;
+}
+
+message GetByIDResponse {
+  // The model if found.
+  Model model = 1;
+}
+
+message Model {
+  int64 id = 1;
+  string name = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}

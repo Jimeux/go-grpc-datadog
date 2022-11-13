@@ -1,0 +1,12 @@
+version: v1
+plugins:
+
+  - name: go
+    out: go
+    opt:
+      - paths=source_relative
+
+  - name: go-grpc
+    out: go
+    opt:
+      - paths=source_relative

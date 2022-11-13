@@ -1,0 +1,35 @@
+version: "3.8"
+services:
+
+  datadog:
+    container_name: datadog
+    image: datadog/agent
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - ./logs/:/logs/
+    environment:
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_LOGS_ENABLED=true
+      # doesn't work
+      - DD_APM_IGNORE_RESOURCES=Close
+      - DD_APM_FILTER_TAGS_REJECT=sql.query_type:Close
+    labels:
+      com.datadoghq.ad.logs: '[{"type":"file", "source": "go", "service": "second", "path": "/logs/second.log"},{"type":"file", "source": "go", "service": "first", "path": "/logs/first.log"}]'
+    ports:
+      - "8126:8126"
+
+  second_db:
+    container_name: second_db
+    image: mysql:8.0
+    volumes:
+      - second_db-store:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_ALLOW_EMPTY_PASSWORD: "true"
+    ports:
+      - ${DATABASE_PORT}:3306
+
+volumes:
+  second_db-store:

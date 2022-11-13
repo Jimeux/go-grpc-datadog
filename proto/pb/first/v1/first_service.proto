@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package first.v1;
+
+import "google/api/field_behavior.proto";
+
+option go_package = "./first";
+
+// Accepts requests from users.
+service FirstService {
+  // Create
+  //
+  // Handles a create request from a user.
+  rpc Create(CreateRequest) returns (CreateResponse);
+
+  // Fetch
+  //
+  // Handles a fetch request from a user.
+  rpc Fetch(FetchRequest) returns (FetchResponse);
+}
+
+message CreateRequest {
+  // The name of the model.
+  string name = 1;
+}
+
+message CreateResponse {
+  // true if okay.
+  bool okay = 1;
+}
+
+message FetchRequest {
+  // A param value.
+  int64 id = 1;
+}
+
+message FetchResponse {
+  // true if okay.
+  bool okay = 1;
+}
