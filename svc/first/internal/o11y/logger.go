@@ -3,6 +3,8 @@ package o11y
 import (
 	"context"
 	"fmt"
+	"os"
+	"path"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -11,13 +13,25 @@ import (
 
 var logger *zap.Logger
 
-func InitLogger(name, ver, env, logPath string) func() {
+func InitLogger(name, env, ver, logPath string) func() {
+	closeFile := func() {}
+	logOut := []string{"stdout"}
+	errOut := []string{"stderr"}
+	if logPath != "" {
+		filePath := path.Join(logPath, name+".log")
+		file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0664)
+		if err != nil {
+			panic(err)
+		}
+		logOut = append(logOut, filePath)
+		errOut = append(errOut, filePath)
+		closeFile = func() { _ = file.Close() }
+	}
+
 	logger = zap.Must(zap.Config{
-		Level:             zap.NewAtomicLevelAt(zap.DebugLevel),
-		Development:       false,
-		DisableCaller:     false,
-		DisableStacktrace: false,
-		Encoding:          "json",
+		Level:       zap.NewAtomicLevelAt(zap.DebugLevel),
+		Development: false,
+		Encoding:    "json",
 		EncoderConfig: zapcore.EncoderConfig{
 			MessageKey:     "body",
 			LevelKey:       "level",
@@ -32,16 +46,23 @@ func InitLogger(name, ver, env, logPath string) func() {
 			EncodeTime:     zapcore.RFC3339NanoTimeEncoder,
 			EncodeDuration: zapcore.NanosDurationEncoder,
 			EncodeCaller:   zapcore.ShortCallerEncoder,
+			// EncodeName:          nil,
+			// NewReflectedEncoder: nil,
+			// ConsoleSeparator:    "",
 		},
-		OutputPaths:      []string{"stdout", logPath},
-		ErrorOutputPaths: []string{"stderr", logPath},
+		OutputPaths:      logOut,
+		ErrorOutputPaths: errOut,
 		InitialFields: map[string]any{
 			"dd.service": name,
 			"dd.env":     env,
 			"dd.version": ver,
 		},
 	}.Build(zap.AddCallerSkip(1)))
-	return func() { _ = logger.Sync() }
+
+	return func() {
+		_ = logger.Sync()
+		closeFile()
+	}
 }
 
 func Err(ctx context.Context, err error, msg string /*, attrs ...zap.Field*/) {
@@ -52,12 +73,12 @@ func Err(ctx context.Context, err error, msg string /*, attrs ...zap.Field*/) {
 		zap.Uint64("dd.span_id", spanID),
 		zap.String("error.msg", err.Error()),
 		zap.String("error.type", fmt.Sprintf("%T", err)),
-		//zap.Object("attributes", zapcore.ObjectMarshalerFunc(func(inner zapcore.ObjectEncoder) error {
-		//	for _, a := range attrs {
-		//		a.AddTo(inner)
-		//	}
-		//	return nil
-		//})),
+		/*zap.Object("attributes", zapcore.ObjectMarshalerFunc(func(inner zapcore.ObjectEncoder) error {
+			for _, a := range attrs {
+				a.AddTo(inner)
+			}
+			return nil
+		})),*/
 	)
 }
 

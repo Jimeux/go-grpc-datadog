@@ -3,6 +3,8 @@ package o11y
 import (
 	"context"
 	"fmt"
+	"os"
+	"path"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -12,6 +14,20 @@ import (
 var logger *zap.Logger
 
 func InitLogger(name, env, ver, logPath string) func() {
+	closeFile := func() {}
+	logOut := []string{"stdout"}
+	errOut := []string{"stderr"}
+	if logPath != "" {
+		filePath := path.Join(logPath, name+".log")
+		file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0664)
+		if err != nil {
+			panic(err)
+		}
+		logOut = append(logOut, filePath)
+		errOut = append(errOut, filePath)
+		closeFile = func() { _ = file.Close() }
+	}
+
 	logger = zap.Must(zap.Config{
 		Level:       zap.NewAtomicLevelAt(zap.DebugLevel),
 		Development: false,
@@ -34,15 +50,19 @@ func InitLogger(name, env, ver, logPath string) func() {
 			// NewReflectedEncoder: nil,
 			// ConsoleSeparator:    "",
 		},
-		OutputPaths:      []string{"stdout", logPath},
-		ErrorOutputPaths: []string{"stderr", logPath},
+		OutputPaths:      logOut,
+		ErrorOutputPaths: errOut,
 		InitialFields: map[string]any{
 			"dd.service": name,
 			"dd.env":     env,
 			"dd.version": ver,
 		},
 	}.Build(zap.AddCallerSkip(1)))
-	return func() { _ = logger.Sync() }
+
+	return func() {
+		_ = logger.Sync()
+		closeFile()
+	}
 }
 
 func Err(ctx context.Context, err error, msg string /*, attrs ...zap.Field*/) {
