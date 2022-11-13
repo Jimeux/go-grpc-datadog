@@ -10,7 +10,6 @@ type Config struct {
 	Environment      string
 	Port             string
 	LogPath          string
-	DDAgentHost      string
 	DatabaseName     string
 	DatabaseHost     string
 	DatabaseUser     string
@@ -25,7 +24,6 @@ func Init() Config {
 		Environment:      os.Getenv("ENVIRONMENT"),
 		Port:             os.Getenv("PORT"),
 		LogPath:          os.Getenv("LOG_PATH"),
-		DDAgentHost:      os.Getenv("DD_AGENT_HOST"),
 		DatabaseName:     os.Getenv("DATABASE_NAME"),
 		DatabaseHost:     os.Getenv("DATABASE_HOST"),
 		DatabaseUser:     os.Getenv("DATABASE_USER"),
