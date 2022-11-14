@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -58,8 +57,6 @@ func main() {
 	defer stop()
 	<-ctx.Done()
 
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*20))
-	defer cancel()
 	grpcServer.GracefulStop()
 }
 

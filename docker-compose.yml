@@ -12,9 +12,6 @@ services:
     environment:
       - DD_API_KEY=${DD_API_KEY}
       - DD_LOGS_ENABLED=true
-      # doesn't work
-      - DD_APM_IGNORE_RESOURCES=Close
-      - DD_APM_FILTER_TAGS_REJECT=sql.query_type:Close
     labels:
       com.datadoghq.ad.logs: '[{"type":"file", "source": "go", "service": "second", "path": "/logs/second.log"},{"type":"file", "source": "go", "service": "first", "path": "/logs/first.log"}]'
     ports:
